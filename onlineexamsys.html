@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExamSphere | Smart • Secure • Simple Online Examinations</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-red: #E50914;
+            --primary-dark-red: #B20710;
+            --secondary-black: #111111;
+            --bg-light: #F7F7F7;
+            --card-white: #FFFFFF;
+            --text-main: #111111;
+            --text-sub: #666666;
+            --border-color: #E5E5E5;
+            --success-green: #198754;
+            --warning-amber: #F59E0B;
+            --error-red: #DC2626;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Typography & Brand */
+        .brand-logo {
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            color: var(--secondary-black);
+            text-decoration: none;
+        }
+        .brand-logo span {
+            color: var(--primary-red);
+        }
+
+        /* Buttons */
+        .btn-red {
+            background-color: var(--primary-red);
+            color: #FFFFFF;
+            font-weight: 600;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        .btn-red:hover {
+            background-color: var(--primary-dark-red);
+            color: #FFFFFF;
+        }
+        .btn-black {
+            background-color: var(--secondary-black);
+            color: #FFFFFF;
+            font-weight: 600;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        .btn-black:hover {
+            background-color: #2a2a2a;
+            color: #FFFFFF;
+        }
+
+        /* Cards & Styling */
+        .custom-card {
+            background: var(--card-white);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+        
+        /* Navigation Sidebar */
+        .app-sidebar {
+            width: 260px;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: var(--secondary-black);
+            color: #FFFFFF;
+            z-index: 100;
+        }
+        .app-sidebar .nav-link {
+            color: #A0A0A0;
+            padding: 14px 24px;
+            font-weight: 500;
+            border-left: 4px solid transparent;
+            cursor: pointer;
+        }
+        .app-sidebar .nav-link.active,
+        .app-sidebar .nav-link:hover {
+            color: #FFFFFF;
+            background-color: #1A1A1A;
+            border-left-color: var(--primary-red);
+        }
+
+        .main-wrapper {
+            margin-left: 260px;
+            padding: 32px;
+        }
+
+        @media (max-width: 768px) {
+            .app-sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            .main-wrapper {
+                margin-left: 0;
+                padding: 16px;
+            }
+        }
+
+        /* Examination Interface */
+        .q-palette-btn {
+            width: 40px;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            background: #FFFFFF;
+            color: var(--text-main);
+        }
+        .q-palette-btn.active {
+            border: 2px solid var(--primary-red);
+        }
+        .q-palette-btn.answered {
+            background: var(--secondary-black);
+            color: #FFFFFF;
+        }
+        .q-palette-btn.review {
+            background: var(--warning-amber);
+            color: #FFFFFF;
+        }
+
+        .option-card {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 14px 18px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #FFFFFF;
+        }
+        .option-card:hover {
+            border-color: var(--secondary-black);
+            background: #FAFAFA;
+        }
+        .option-card.selected {
+            border-color: var(--primary-red);
+            background: rgba(229, 9, 20, 0.03);
+        }
+
+        /* Helper Classes */
+        .view-page {
+            display: none;
+        }
+        .view-page.active {
+            display: block;
+        }
+        .badge-subject {
+            background-color: rgba(229, 9, 20, 0.1);
+            color: var(--primary-red);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sidebarComponent" class="app-sidebar d-none">
+        <div class="p-4 border-bottom border-dark">
+            <h3 class="brand-logo text-white mb-0">Exam<span>Sphere</span></h3>
+            <small class="text-secondary">Academic Portal</small>
+        </div>
+        <div class="nav flex-column mt-3">
+            <a class="nav-link active" onclick="navigateTo('dashboardView')"><i class="fa-solid fa-chart-pie me-3"></i>Dashboard</a>
+            <a class="nav-link" onclick="navigateTo('examsView')"><i class="fa-solid fa-file-lines me-3"></i>Examinations</a>
+            <a class="nav-link" onclick="navigateTo('historyView')"><i class="fa-solid fa-square-poll-vertical me-3"></i>My Results</a>
+            <a class="nav-link text-danger mt-5" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket me-3"></i>Sign Out</a>
+        </div>
+    </div>
+
+    <div id="mainWrapper" class="p-0">
+
+        <section id="landingView" class="view-page active">
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom px-4 py-3">
+                <div class="container-fluid">
+                    <a class="brand-logo fs-3" href="#">Exam<span>Sphere</span></a>
+                    <div>
+                        <button class="btn btn-outline-dark me-2" onclick="navigateTo('loginView')">Sign In</button>
+                        <button class="btn btn-red" onclick="navigateTo('registerView')">Register</button>
+                    </div>
+                </div>
+            </nav>
+            <div class="container py-5 text-center">
+                <div class="py-5" style="max-width: 800px; margin: 0 auto;">
+                    <span class="badge badge-subject px-3 py-2 rounded-pill mb-3">Next Generation Assessment Engine</span>
+                    <h1 class="display-4 fw-bold text-dark mb-4">Smarter Exams. Better Results.</h1>
+                    <p class="lead text-secondary mb-5">A secure, minimal, and high-performance online examination platform engineered for seamless digital academic evaluations.</p>
+                    <div class="d-flex justify-content-center gap-3">
+                        <button class="btn btn-red btn-lg px-4" onclick="navigateTo('loginView')">Student Portal Login</button>
+                        <button class="btn btn-black btn-lg px-4" onclick="fillDemoAdmin()">Admin Console</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="loginView" class="view-page">
+            <div class="container min-vh-100 d-flex align-items-center justify-content-center">
+                <div class="row w-100 custom-card overflow-hidden my-5" style="max-width: 900px;">
+                    <div class="col-md-6 bg-dark text-white p-5 d-flex flex-column justify-content-between">
+                        <div>
+                            <h2 class="brand-logo text-white">Exam<span>Sphere</span></h2>
+                            <p class="text-secondary mt-2">Smart • Secure • Simple Online Examinations</p>
+                        </div>
+                        <div>
+                            <p class="small text-secondary mb-1">B.Sc. Computer Science Capstone System</p>
+                            <small class="text-white-50">Authorized Access Only</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6 p-5 bg-white">
+                        <h3 class="fw-bold mb-1">Welcome Back</h3>
+                        <p class="text-muted small mb-4">Sign in to access your assessment engine.</p>
+                        <form id="loginForm" onsubmit="handleLogin(event)">
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Email Address / Student ID</label>
+                                <input type="email" id="loginEmail" class="form-control" placeholder="student@examsphere.com" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Password</label>
+                                <input type="password" id="loginPassword" class="form-control" required>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input type="checkbox" class="form-check-input" id="rememberMe">
+                                <label class="form-check-label small" for="rememberMe">Remember Session</label>
+                            </div>
+                            <button type="submit" class="btn btn-red w-100 py-2">Sign In</button>
+                        </form>
+                        <div class="mt-4 text-center">
+                            <small class="text-muted">Don't have an account? <a href="#" class="text-danger fw-bold text-decoration-none" onclick="navigateTo('registerView')">Register</a></small>
+                        </div>
+                        <div class="mt-3 p-3 bg-light rounded text-center">
+                            <small class="d-block text-secondary"><b>Demo Creds:</b> student@examsphere.com | Student@123</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="registerView" class="view-page">
+            <div class="container py-5">
+                <div class="custom-card p-5 mx-auto" style="max-width: 700px;">
+                    <h3 class="fw-bold mb-1">Student Registration</h3>
+                    <p class="text-muted small mb-4">Create your academic profile to participate in scheduled examinations.</p>
+                    <form onsubmit="handleRegister(event)">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Full Name</label>
+                                <input type="text" class="form-control" required placeholder="Jane Doe">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Student Register Code</label>
+                                <input type="text" class="form-control" required placeholder="STU2026099">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Email Address</label>
+                                <input type="email" class="form-control" required placeholder="jane@college.edu">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Department</label>
+                                <input type="text" class="form-control" value="Computer Science" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Password</label>
+                                <input type="password" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Confirm Password</label>
+                                <input type="password" class="form-control" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-red w-100 mt-4 py-2">Complete Registration</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <section id="dashboardView" class="view-page">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h3 class="fw-bold mb-0">Student Dashboard</h3>
+                    <p class="text-muted small mb-0">Welcome back, <span id="dashStudentName">Jane Student</span></p>
+                </div>
+                <span class="badge bg-dark px-3 py-2">B.Sc. CS • 3rd Year</span>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="custom-card p-3 border-start border-4 border-danger">
+                        <small class="text-muted fw-bold">AVAILABLE EXAMS</small>
+                        <h2 class="fw-bold text-dark mt-2 mb-0">5</h2>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="custom-card p-3 border-start border-4 border-dark">
+                        <small class="text-muted fw-bold">COMPLETED EXAMS</small>
+                        <h2 class="fw-bold text-dark mt-2 mb-0" id="dashCompletedCount">0</h2>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="custom-card p-3 border-start border-4 border-success">
+                        <small class="text-muted fw-bold">AVERAGE SCORE</small>
+                        <h2 class="fw-bold text-dark mt-2 mb-0" id="dashAvgScore">--</h2>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="custom-card p-3 border-start border-4 border-warning">
+                        <small class="text-muted fw-bold">STATUS</small>
+                        <h2 class="fw-bold text-success mt-2 mb-0">ACTIVE</h2>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="fw-bold mb-3">Available Examinations</h5>
+            <div class="row g-4" id="examCardsContainer"></div>
+        </section>
+
+        <section id="examsView" class="view-page">
+            <h3 class="fw-bold mb-4">All Examinations</h3>
+            <div class="row g-4" id="fullExamCardsContainer"></div>
+        </section>
+
+        <section id="instructionsView" class="view-page">
+            <div class="custom-card p-5 mx-auto" style="max-width: 800px;">
+                <span class="badge badge-subject mb-2">Subject Verification</span>
+                <h3 class="fw-bold text-dark" id="instTitle">Python Programming Assessment</h3>
+                <p class="text-muted border-bottom pb-3">Duration: <b id="instDuration">15</b> Minutes | Total Questions: <b>10</b> | Passing Marks: <b>5</b></p>
+                
+                <h5 class="fw-bold mt-4">Important Rules & Instructions</h5>
+                <ol class="text-secondary lh-lg mb-4">
+                    <li>Read every question carefully before choosing your target answer.</li>
+                    <li>You can navigate between questions freely using the Question Palette.</li>
+                    <li>You can mark questions for review if you intend to re-evaluate them later.</li>
+                    <li>The evaluation timer will count down automatically. When zeroed, your exam will auto-submit.</li>
+                    <li>Do not refresh or close the browser tab during the attempt.</li>
+                </ol>
+
+                <div class="form-check mb-4 bg-light p-3 rounded">
+                    <input class="form-check-input ms-1 me-2" type="checkbox" id="agreeCheck">
+                    <label class="form-check-label fw-bold small" for="agreeCheck">
+                        I have read and fully agree to comply with all examination rules.
+                    </label>
+                </div>
+
+                <div class="d-flex gap-3">
+                    <button class="btn btn-outline-secondary px-4" onclick="navigateTo('dashboardView')">Cancel</button>
+                    <button class="btn btn-red px-4" onclick="initiateExamSession()">Start Examination</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="portalView" class="view-page">
+            <nav class="navbar navbar-dark bg-dark px-4 py-3 rounded mb-4">
+                <span class="navbar-brand brand-logo text-white fs-4">Exam<span>Sphere</span></span>
+                <div class="text-white fw-bold">
+                    Time Remaining: <span id="timerDisplay" class="text-danger fs-4 ms-2 font-monospace">15:00</span>
+                </div>
+            </nav>
+
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="custom-card p-4">
+                        <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+                            <h5 class="fw-bold mb-0" id="portalQIndex">Question 1 of 10</h5>
+                            <span class="badge bg-dark">1 Mark</span>
+                        </div>
+                        <h5 class="fw-normal text-dark mb-4" id="portalQText">Loading Question...</h5>
+                        <div id="portalOptionsContainer" class="d-flex flex-column gap-3 mb-4"></div>
+                        <div class="d-flex justify-content-between pt-3 border-top">
+                            <button class="btn btn-outline-secondary" onclick="navigateQuestion(-1)">Previous</button>
+                            <div>
+                                <button class="btn btn-warning text-white me-2" onclick="toggleMarkForReview()">Mark for Review</button>
+                                <button class="btn btn-red" onclick="navigateQuestion(1)">Save & Next</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="custom-card p-4">
+                        <h6 class="fw-bold mb-3">Question Navigation</h6>
+                        <div id="portalPalette" class="d-flex flex-wrap gap-2 mb-4"></div>
+                        
+                        <div class="border-top pt-3 mb-4">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="q-palette-btn answered" style="width:20px; height:20px;"></span>
+                                <small class="text-secondary">Answered</small>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="q-palette-btn review" style="width:20px; height:20px;"></span>
+                                <small class="text-secondary">Marked for Review</small>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="q-palette-btn" style="width:20px; height:20px;"></span>
+                                <small class="text-secondary">Unvisited / Unanswered</small>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-black w-100 py-2" onclick="confirmSubmission()">Submit Examination</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="resultView" class="view-page">
+            <div class="custom-card p-5 mx-auto text-center" style="max-width: 700px;">
+                <span class="badge badge-subject mb-2">Scorecard Report</span>
+                <h2 class="fw-bold mb-1" id="resExamTitle">Python Programming Assessment</h2>
+                <p class="text-muted small mb-4">Attempt Status: <span class="badge bg-success">COMPLETED</span></p>
+
+                <div class="my-4 p-4 rounded bg-light d-inline-block w-100">
+                    <span class="text-muted fw-bold d-block mb-1">FINAL SCORE</span>
+                    <h1 class="display-3 fw-bold text-danger mb-0" id="resScore">8 / 10</h1>
+                    <h4 class="fw-bold text-dark mt-2" id="resPercentage">80% Grade A</h4>
+                    <span id="resStatusBadge" class="badge bg-success fs-6 px-3 py-2 mt-2">PASSED</span>
+                </div>
+
+                <div class="row g-3 my-3 text-start">
+                    <div class="col-6">
+                        <div class="p-3 border rounded">
+                            <small class="text-muted d-block">Correct Answers</small>
+                            <h4 class="fw-bold text-success mb-0" id="resCorrect">8</h4>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 border rounded">
+                            <small class="text-muted d-block">Wrong / Unanswered</small>
+                            <h4 class="fw-bold text-danger mb-0" id="resWrong">2</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-3 justify-content-center mt-4">
+                    <button class="btn btn-outline-dark" onclick="window.print()"><i class="fa-solid fa-print me-2"></i>Download / Print Result</button>
+                    <button class="btn btn-red" onclick="navigateTo('dashboardView')">Return to Dashboard</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="historyView" class="view-page">
+            <h3 class="fw-bold mb-4">My Examination History</h3>
+            <div class="custom-card p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Exam Title</th>
+                                <th>Subject</th>
+                                <th>Score</th>
+                                <th>Percentage</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">No completed examinations recorded yet.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        // Database Seed Data (5 Subjects x 10 Questions = 50 Complete Questions)
+        const EXAM_DATABASE = [
+            {
+                id: 1,
+                title: "Python Programming",
+                description: "Evaluation of core Python syntax, data types, control structures, and methods.",
+                duration: 15,
+                questions: [
+                    { id: 101, text: "What is the correct file extension for Python files?", options: [".python", ".pt", ".py", ".pyt"], answer: 2 },
+                    { id: 102, text: "Which keyword is used to create a function in Python?", options: ["function", "def", "fun", "define"], answer: 1 },
+                    { id: 103, text: "What is the output of len(['apple', 'banana', 'cherry'])?", options: ["2", "3", "4", "Error"], answer: 1 },
+                    { id: 104, text: "Which operator is used for exponentiation (power) in Python?", options: ["^", "*", "**", "pow"], answer: 2 },
+                    { id: 105, text: "How do you insert comments in Python code?", options: ["//", "/*", "#", "--"], answer: 2 },
+                    { id: 106, text: "Which data type is mutable in Python?", options: ["Tuple", "String", "List", "Integer"], answer: 2 },
+                    { id: 107, text: "What is the correct way to get the second item in a list named fruits?", options: ["fruits[1]", "fruits[2]", "fruits(1)", "fruits.get(2)"], answer: 0 },
+                    { id: 108, text: "Which built-in function converts a value into a string?", options: ["str()", "toString()", "string()", "text()"], answer: 0 },
+                    { id: 109, text: "What is the result of 10 // 3 in Python?", options: ["3.33", "3", "1", "3.0"], answer: 1 },
+                    { id: 110, text: "Which method is used to add an item to the end of a list?", options: ["push()", "append()", "add()", "insert()"], answer: 1 }
+                ]
+            },
+            {
+                id: 2,
+                title: "Java Programming",
+                description: "Covers Object-Oriented Programming, JVM, dynamic memory, and interfaces.",
+                duration: 15,
+                questions: [
+                    { id: 201, text: "Which component is responsible for executing Java bytecode?", options: ["JDK", "JVM", "JRE", "JIT Compiler"], answer: 1 },
+                    { id: 202, text: "What is the default value of a boolean variable in Java?", options: ["true", "false", "null", "0"], answer: 1 },
+                    { id: 203, text: "Which keyword is used to inherit a class in Java?", options: ["implements", "extends", "inherits", "using"], answer: 1 },
+                    { id: 204, text: "Which access modifier makes a member visible only within its own class?", options: ["public", "protected", "private", "default"], answer: 2 },
+                    { id: 205, text: "Which collection class allows unique elements only?", options: ["ArrayList", "HashSet", "LinkedList", "Vector"], answer: 1 },
+                    { id: 206, text: "What is the entry point method signature in Java?", options: ["public void main(String[] args)", "public static void main(String[] args)", "static void main(String args)", "public static int main(String[] args)"], answer: 1 },
+                    { id: 207, text: "Which keyword stops execution of a loop?", options: ["stop", "break", "exit", "return"], answer: 1 },
+                    { id: 208, text: "Java source code is compiled into what intermediate format?", options: ["Machine Code", "Bytecode", "Source Code", "Assembly"], answer: 1 },
+                    { id: 209, text: "Which of these is NOT a primitive data type in Java?", options: ["int", "boolean", "String", "char"], answer: 2 },
+                    { id: 210, text: "Which package is imported by default in every Java program?", options: ["java.io", "java.util", "java.lang", "java.net"], answer: 2 }
+                ]
+            },
+            {
+                id: 3,
+                title: "Database Management Systems",
+                description: "Covers SQL, relational schema design, normalization, and ACID guarantees.",
+                duration: 15,
+                questions: [
+                    { id: 301, text: "What does SQL stand for?", options: ["Sequential Query Language", "Structured Query Language", "Simple Query Language", "Server Query Language"], answer: 1 },
+                    { id: 302, text: "Which SQL clause is used to filter records in aggregate results?", options: ["WHERE", "HAVING", "GROUP BY", "ORDER BY"], answer: 1 },
+                    { id: 303, text: "A key that uniquely identifies a row in a table is called:", options: ["Foreign Key", "Primary Key", "Candidate Key", "Super Key"], answer: 1 },
+                    { id: 304, text: "Which normal form eliminates partial dependencies?", options: ["1NF", "2NF", "3NF", "BCNF"], answer: 1 },
+                    { id: 305, text: "What property guarantees transaction processing reliability?", options: ["BASE", "ACID", "CAP", "SOLID"], answer: 1 },
+                    { id: 306, text: "Which command removes all records without deleting the table schema?", options: ["DROP", "TRUNCATE", "DELETE", "REMOVE"], answer: 1 },
+                    { id: 307, text: "Which command belongs to Data Definition Language (DDL)?", options: ["SELECT", "INSERT", "CREATE", "UPDATE"], answer: 2 },
+                    { id: 308, text: "A record in Table A connecting to multiple records in Table B is a:", options: ["One-to-One", "One-to-Many", "Many-to-Many", "Self-Relationship"], answer: 1 },
+                    { id: 309, text: "Which operator searches for a specified pattern in a column?", options: ["IN", "LIKE", "BETWEEN", "MATCH"], answer: 1 },
+                    { id: 310, text: "Which constraint prevents null entries in a column?", options: ["UNIQUE", "NOT NULL", "CHECK", "DEFAULT"], answer: 1 }
+                ]
+            },
+            {
+                id: 4,
+                title: "Data Structures",
+                description: "Evaluation of linear/non-linear structures, stacks, queues, and tree traversals.",
+                duration: 15,
+                questions: [
+                    { id: 401, text: "Which data structure follows the Last-In, First-Out (LIFO) principle?", options: ["Queue", "Stack", "Array", "Linked List"], answer: 1 },
+                    { id: 402, text: "What is the worst-case time complexity of Quick Sort?", options: ["O(n log n)", "O(n^2)", "O(n)", "O(1)"], answer: 1 },
+                    { id: 403, text: "Which data structure is non-linear?", options: ["Array", "Tree", "Stack", "Queue"], answer: 1 },
+                    { id: 404, text: "A tree where every node has at most two children is called a:", options: ["B-Tree", "Binary Tree", "AVL Tree", "Red-Black Tree"], answer: 1 },
+                    { id: 405, text: "What data structure is used to implement Breadth-First Search (BFS)?", options: ["Stack", "Queue", "Array", "Heap"], answer: 1 },
+                    { id: 406, text: "What is the time complexity of searching in a Balanced BST?", options: ["O(1)", "O(log n)", "O(n)", "O(n^2)"], answer: 1 },
+                    { id: 407, text: "Which structure utilizes Front and Rear pointers?", options: ["Stack", "Queue", "Graph", "Array"], answer: 1 },
+                    { id: 408, text: "In a Stack, inserting an element is known as:", options: ["Pop", "Push", "Enqueue", "Peek"], answer: 1 },
+                    { id: 409, text: "What condition occurs when inserting into a full stack?", options: ["Underflow", "Overflow", "Garbage Error", "Null Pointer"], answer: 1 },
+                    { id: 410, text: "Which tree traversal visits the root node first?", options: ["In-order", "Pre-order", "Post-order", "Level-order"], answer: 1 }
+                ]
+            },
+            {
+                id: 5,
+                title: "Web Development",
+                description: "Covers modern frontend standards, DOM manipulation, HTTP methods, and APIs.",
+                duration: 15,
+                questions: [
+                    { id: 501, text: "What does HTML stand for?", options: ["Hyper Tech Markup Language", "Hypertext Markup Language", "High Text Machine Language", "Home Tool Markup Language"], answer: 1 },
+                    { id: 502, text: "Which CSS property changes the background color of an element?", options: ["color", "background-color", "bgcolor", "canvas-color"], answer: 1 },
+                    { id: 503, text: "Which HTTP method is typically used to update existing resources?", options: ["GET", "PUT", "POST", "DELETE"], answer: 1 },
+                    { id: 504, text: "Inside which HTML tag do we place JavaScript code?", options: ["<js>", "<script>", "<javascript>", "<code>"], answer: 1 },
+                    { id: 505, text: "Which layout mode provides a 1-dimensional alignment system in CSS?", options: ["Grid", "Flexbox", "Float", "Position"], answer: 1 },
+                    { id: 506, text: "What is the primary purpose of JSON?", options: ["Database Indexing", "Data Interchange", "Styling Webpages", "Compiling JavaScript"], answer: 1 },
+                    { id: 507, text: "Which event fires when a user clicks an HTML element?", options: ["onhover", "onclick", "onchange", "onpress"], answer: 1 },
+                    { id: 508, text: "Which HTTP status code signifies 'Not Found'?", options: ["200", "404", "500", "403"], answer: 1 },
+                    { id: 509, text: "Which attribute specifies alternate text for an image in HTML?", options: ["title", "alt", "src", "description"], answer: 1 },
+                    { id: 510, text: "Which technology updates web content asynchronously without page reloads?", options: ["DOM", "AJAX", "Bootstrap", "Sass"], answer: 1 }
+                ]
+            }
+        ];
+
+        // Global State Management
+        let currentUser = null;
+        let currentExam = null;
+        let activeQuestionIdx = 0;
+        let userAnswers = {}; // { questionId: { optIdx, isReview } }
+        let timerInterval = null;
+        let attemptHistory = [];
+
+        // Single Page Router
+        function navigateTo(viewId) {
+            // Protected Route Guard
+            const protectedViews = ['dashboardView', 'examsView', 'instructionsView', 'portalView', 'resultView', 'historyView'];
+            if (protectedViews.includes(viewId) && !currentUser) {
+                alert("Unauthorized Access. Please login first.");
+                viewId = 'loginView';
+            }
+
+            document.querySelectorAll('.view-page').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+
+            const sidebar = document.getElementById('sidebarComponent');
+            const mainWrapper = document.getElementById('mainWrapper');
+            
+            if (currentUser && viewId !== 'portalView' && viewId !== 'loginView' && viewId !== 'registerView' && viewId !== 'landingView') {
+                sidebar.classList.remove('d-none');
+                mainWrapper.classList.add('main-wrapper');
+            } else {
+                sidebar.classList.add('d-none');
+                mainWrapper.classList.remove('main-wrapper');
+            }
+
+            if (viewId === 'dashboardView') renderDashboard();
+            if (viewId === 'examsView') renderExamsList();
+            if (viewId === 'historyView') renderHistory();
+        }
+
+        // Authentication Handlers
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            currentUser = { name: "Jane Student", email: email, code: "STU2026001" };
+            navigateTo('dashboardView');
+        }
+
+        function fillDemoAdmin() {
+            document.getElementById('loginEmail').value = 'student@examsphere.com';
+            document.getElementById('loginPassword').value = 'Student@123';
+            navigateTo('loginView');
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            alert("Registration successful! Please sign in with your credentials.");
+            navigateTo('loginView');
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            navigateTo('loginView');
+        }
+
+        // Render Dashboard Cards
+        function renderDashboard() {
+            const container = document.getElementById('examCardsContainer');
+            container.innerHTML = EXAM_DATABASE.map(exam => `
+                <div class="col-md-6 col-lg-4">
+                    <div class="custom-card p-4 h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <span class="badge badge-subject mb-2">10 Questions • 15 Mins</span>
+                            <h5 class="fw-bold text-dark">${exam.title}</h5>
+                            <p class="text-secondary small mb-3">${exam.description}</p>
+                        </div>
+                        <button class="btn btn-red w-100 mt-3" onclick="selectExamForInstructions(${exam.id})">View Exam</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderExamsList() {
+            const container = document.getElementById('fullExamCardsContainer');
+            container.innerHTML = EXAM_DATABASE.map(exam => `
+                <div class="col-md-6">
+                    <div class="custom-card p-4 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-bold text-dark mb-1">${exam.title}</h5>
+                            <p class="text-secondary small mb-0">10 Marks • Passing: 5 Marks</p>
+                        </div>
+                        <button class="btn btn-black" onclick="selectExamForInstructions(${exam.id})">Start</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Instructions Selection
+        function selectExamForInstructions(examId) {
+            currentExam = EXAM_DATABASE.find(e => e.id === examId);
+            document.getElementById('instTitle').innerText = currentExam.title;
+            document.getElementById('instDuration').innerText = currentExam.duration;
+            document.getElementById('agreeCheck').checked = false;
+            navigateTo('instructionsView');
+        }
+
+        // Examination Portal Controller
+        function initiateExamSession() {
+            if (!document.getElementById('agreeCheck').checked) {
+                alert("Please accept the examination rules before proceeding.");
+                return;
+            }
+
+            activeQuestionIdx = 0;
+            userAnswers = {};
+            renderPortalQuestion();
+            renderPalette();
+            startCountdown(currentExam.duration * 60);
+            navigateTo('portalView');
+        }
+
+        function startCountdown(seconds) {
+            let remain = seconds;
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                let m = Math.floor(remain / 60);
+                let s = remain % 60;
+                document.getElementById('timerDisplay').innerText = 
+                    `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
+                
+                if (--remain < 0) {
+                    clearInterval(timerInterval);
+                    alert("Timer elapsed! Auto-submitting assessment.");
+                    evaluateAndSubmit();
+                }
+            }, 1000);
+        }
+
+        function renderPortalQuestion() {
+            const q = currentExam.questions[activeQuestionIdx];
+            document.getElementById('portalQIndex').innerText = `Question ${activeQuestionIdx + 1} of ${currentExam.questions.length}`;
+            document.getElementById('portalQText').innerText = q.text;
+
+            const optsContainer = document.getElementById('portalOptionsContainer');
+            optsContainer.innerHTML = q.options.map((opt, i) => {
+                const isSelected = userAnswers[q.id]?.optIdx === i;
+                return `
+                    <div class="option-card ${isSelected ? 'selected' : ''}" onclick="selectOption(${i})">
+                        <b>${String.fromCharCode(65 + i)}.</b> ${opt}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function selectOption(optIdx) {
+            const qId = currentExam.questions[activeQuestionIdx].id;
+            userAnswers[qId] = { optIdx, isReview: userAnswers[qId]?.isReview || false };
+            renderPortalQuestion();
+            renderPalette();
+        }
+
+        function toggleMarkForReview() {
+            const qId = currentExam.questions[activeQuestionIdx].id;
+            const current = userAnswers[qId] || {};
+            userAnswers[qId] = { ...current, isReview: !current.isReview };
+            renderPalette();
+        }
+
+        function navigateQuestion(step) {
+            const newIdx = activeQuestionIdx + step;
+            if (newIdx >= 0 && newIdx < currentExam.questions.length) {
+                activeQuestionIdx = newIdx;
+                renderPortalQuestion();
+                renderPalette();
+            }
+        }
+
+        function renderPalette() {
+            const container = document.getElementById('portalPalette');
+            container.innerHTML = currentExam.questions.map((q, i) => {
+                const ans = userAnswers[q.id];
+                let stateClass = '';
+                if (ans?.isReview) stateClass = 'review';
+                else if (ans?.optIdx !== undefined) stateClass = 'answered';
+                if (i === activeQuestionIdx) stateClass += ' active';
+
+                return `
+                    <div class="q-palette-btn ${stateClass}" onclick="jumpToQuestion(${i})">${i + 1}</div>
+                `;
+            }).join('');
+        }
+
+        function jumpToQuestion(idx) {
+            activeQuestionIdx = idx;
+            renderPortalQuestion();
+            renderPalette();
+        }
+
+        function confirmSubmission() {
+            if (confirm("Are you sure you want to submit your examination? Once submitted, answers cannot be changed.")) {
+                evaluateAndSubmit();
+            }
+        }
+
+        // Automatic Evaluation Engine
+        function evaluateAndSubmit() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let correctCount = 0;
+
+            currentExam.questions.forEach(q => {
+                const userAns = userAnswers[q.id];
+                if (userAns && userAns.optIdx === q.answer) {
+                    score += 1;
+                    correctCount++;
+                }
+            });
+
+            const total = currentExam.questions.length;
+            const wrongCount = total - correctCount;
+            const pct = Math.round((score / total) * 100);
+            const passed = score >= 5;
+
+            // Save Attempt Record
+            attemptHistory.unshift({
+                title: currentExam.title,
+                subject: currentExam.title,
+                score: `${score} / ${total}`,
+                pct: `${pct}%`,
+                status: passed ? 'PASSED' : 'FAILED'
+            });
+
+            // Update Result UI
+            document.getElementById('resExamTitle').innerText = currentExam.title;
+            document.getElementById('resScore').innerText = `${score} / ${total}`;
+            document.getElementById('resPercentage').innerText = `${pct}% Overall Rating`;
+            document.getElementById('resCorrect').innerText = correctCount;
+            document.getElementById('resWrong').innerText = wrongCount;
+
+            const badge = document.getElementById('resStatusBadge');
+            badge.innerText = passed ? 'PASSED' : 'FAILED';
+            badge.className = `badge ${passed ? 'bg-success' : 'bg-danger'} fs-6 px-3 py-2 mt-2`;
+
+            // Update Dashboard Counters
+            document.getElementById('dashCompletedCount').innerText = attemptHistory.length;
+            document.getElementById('dashAvgScore').innerText = `${pct}%`;
+
+            navigateTo('resultView');
+        }
+
+        function renderHistory() {
+            const tbody = document.getElementById('historyTableBody');
+            if (attemptHistory.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No completed examinations recorded yet.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = attemptHistory.map(h => `
+                <tr>
+                    <td class="fw-bold">${h.title}</td>
+                    <td>${h.subject}</td>
+                    <td>${h.score}</td>
+                    <td>${h.pct}</td>
+                    <td><span class="badge ${h.status === 'PASSED' ? 'bg-success' : 'bg-danger'}">${h.status}</span></td>
+                </tr>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
